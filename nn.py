@@ -17,7 +17,7 @@ class Neuron:
     
     def __call__(self, xs): #w1*x1 + w2*x2 + ... + wn*xn + b, then apply tanh
         activation = [w*x for w, x in zip(self.weights, xs)] + [self.bias]
-        return Value(sum(activation)).tanh()
+        return sum(activation).tanh()
 
 class Layer:
     """
@@ -34,7 +34,7 @@ class Layer:
     
     def __call__(self, xs):
         out = [neuron(xs) for neuron in self.neurons] #just apply the neuron to the input for all neurons in the layer
-        return out
+        return out[0] if len(out) == 1 else out
 
 class MLP:
     """
