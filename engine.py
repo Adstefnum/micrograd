@@ -31,17 +31,17 @@ class Value:
         x = self.data
         t = (np.exp(2*x) - 1)/(np.exp(2*x) + 1)
         out = Value(t)
-        def backward():
+        def _backward():
             self.grad += (1 - t**2) * out.grad
-        out._backward = backward
+        out._backward = _backward
         return out
 
     def exp(self):
         x = self.data
         out = Value(np.exp(x))
-        def backward():
+        def _backward():
             self.grad += out.data * out.grad
-        out._backward = backward
+        out._backward = _backward
         return out
     
     def __repr__(self):
@@ -50,19 +50,19 @@ class Value:
     def __add__(self, other):
         other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data + other.data, children=(self, other))
-        def backward():
+        def _backward():
             self.grad += 1 * out.grad #local grad * global grad (chain rule)
             other.grad += 1 * out.grad #it's += because we can have multiple paths to the same node and we need to note their contributions
-        out._backward = backward
+        out._backward = _backward
         return out
 
     def __mul__(self, other):
         other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data * other.data, children=(self, other))
-        def backward():
+        def _backward():
             self.grad += other.data * out.grad
             other.grad += self.data * out.grad
-        out._backward = backward
+        out._backward = _backward
         return out
 
     def __truediv__(self, other):
@@ -72,9 +72,9 @@ class Value:
     def __pow__(self, other):
         other = other if isinstance(other, Value) else Value(other)
         out = Value(self.data ** other.data, children=(self, other))
-        def backward():
+        def _backward():
             self.grad += other.data * (self.data ** (other.data - 1)) * out.grad
-        out._backward = backward
+        out._backward = _backward
         return out
 
     def __sub__(self, other):
