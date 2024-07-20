@@ -1,3 +1,5 @@
+import numpy as np
+
 class Value:
     """
     A data structure to hold a value and its gradient.
@@ -34,6 +36,14 @@ class Value:
         out._backward = backward
         return out
 
+    def exp(self):
+        x = self.data
+        out = Value(np.exp(x))
+        def backward():
+            self.grad += out.data * out.grad
+        out._backward = backward
+        return out
+    
     def __repr__(self):
         return f'Value(data={self.data}, gradient={self.grad})'
 
