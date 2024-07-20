@@ -2,13 +2,28 @@ class Value:
     """
     A data structure to hold a value and its gradient.
     """
-    def __init__(self, data):
+    def __init__(self, data, children=()):
         self.data = data
         self.grad = 0.0
         self._backward = lambda: None
+        self.children = set(children)
     
     def backward(self):
-        pass
+        
+        topo = []
+        visited = set()
+
+        def build_topo(v):
+            if v not in visited:
+                visited.add(v)
+                for child in v.children:
+                    build_topo(child)
+                topo.append(v)
+        build_topo(self)
+
+        self.grad = 1.0 # seed gradient, we set the gradient of the output node to 1
+        for v in reversed(topo): #we run in reverse as the topo list saves the first nodes first but we need to backpropagate from the output node
+            v._backward()
 
     def tanh(self):
         x = self.data
@@ -24,7 +39,7 @@ class Value:
 
     def __add__(self, other):
         other = other if isinstance(other, Value) else Value(other)
-        out = Value(self.data + other.data)
+        out = Value(self.data + other.data, children=(self, other))
         def backward():
             self.grad += 1 * out.grad #local grad * global grad (chain rule)
             other.grad += 1 * out.grad #it's += because we can have multiple paths to the same node and we need to note their contributions
@@ -33,7 +48,7 @@ class Value:
 
     def __mul__(self, other):
         other = other if isinstance(other, Value) else Value(other)
-        out = Value(self.data * other.data)
+        out = Value(self.data * other.data, children=(self, other))
         def backward():
             self.grad += other.data * out.grad
             other.grad += self.data * out.grad
@@ -42,11 +57,11 @@ class Value:
 
     def __truediv__(self, other):
         other = other if isinstance(other, Value) else Value(other)
-        return Value(self.data * other.data**-1)
+        return Value(self.data * other.data**-1, children=(self, other))
 
     def __pow__(self, other):
         other = other if isinstance(other, Value) else Value(other)
-        out = Value(self.data ** other.data)
+        out = Value(self.data ** other.data, children=(self, other))
         def backward():
             self.grad += other.data * (self.data ** (other.data - 1)) * out.grad
         out._backward = backward
