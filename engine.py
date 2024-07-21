@@ -30,7 +30,7 @@ class Value:
     def tanh(self):
         x = self.data
         t = (np.exp(2*x) - 1)/(np.exp(2*x) + 1)
-        out = Value(t)
+        out = Value(t, children=(self,))
         def _backward():
             self.grad += (1 - t**2) * out.grad
         out._backward = _backward
@@ -38,7 +38,7 @@ class Value:
 
     def exp(self):
         x = self.data
-        out = Value(np.exp(x))
+        out = Value(np.exp(x), children=(self,))
         def _backward():
             self.grad += out.data * out.grad
         out._backward = _backward
@@ -66,14 +66,13 @@ class Value:
         return out
 
     def __truediv__(self, other):
-        other = other if isinstance(other, Value) else Value(other)
-        return Value(self.data * other.data**-1, children=(self, other))
+        return self * other**-1
 
     def __pow__(self, other):
-        other = other if isinstance(other, Value) else Value(other)
-        out = Value(self.data ** other.data, children=(self, other))
+        assert isinstance(other, (int, float)), "The exponent must be an integer or a float."
+        out = Value(self.data ** other, children=(self,))
         def _backward():
-            self.grad += other.data * (self.data ** (other.data - 1)) * out.grad
+            self.grad += other * (self.data ** (other - 1)) * out.grad
         out._backward = _backward
         return out
 
@@ -81,7 +80,7 @@ class Value:
         return self + (-other)
 
     def __neg__(self):
-        return Value(-self.data)
+        return self * -1 
 
     def __radd__(self, other):
         return self + other
