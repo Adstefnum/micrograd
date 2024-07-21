@@ -1,8 +1,8 @@
 from nn import MLP
 
 no_of_epochs = 20
-learning_rate = 0.1  # should be positive, negative here is likely a typo
-loss_tol = 1e-5
+learning_rate = 0.1  
+loss_tol = 0
 
 def pretty_print_list(lst):
     print("\n".join(map(str, lst)))
@@ -33,12 +33,12 @@ def train():
         
         # update
         for p in m.parameters():
-            p.data += learning_rate * p.grad
+            p.data -= learning_rate * p.grad
         
         print(epoch, loss.data)
         
         # Check if loss is below tolerance or max epochs reached
-        if loss.data < loss_tol:
+        if loss.data < loss_tol or epoch >= no_of_epochs:
             break
         
         epoch += 1
