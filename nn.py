@@ -5,9 +5,9 @@ class Neuron:
     """
     A simple Neuron class that holds weights and bias
     """
-    def __init__(self, no_of_neurons_from_next_layer):
-        self.weights = [Value(random.uniform(-1, 1)) for _ in range(no_of_neurons_from_next_layer)]
-        self.bias = Value(0)
+    def __init__(self, no_of_neurons_in_cur_layer):
+        self.weights = [Value(random.uniform(-1, 1)) for _ in range(no_of_neurons_in_cur_layer)]
+        self.bias = Value(random.uniform(-1, 1))
 
     def parameters(self): #returns the weights and bias of the neuron in a list
         return self.weights + [self.bias]
@@ -16,15 +16,15 @@ class Neuron:
         return f"Neuron(weights={self.weights}, bias={self.bias})"
     
     def __call__(self, xs): #w1*x1 + w2*x2 + ... + wn*xn + b, then apply tanh
-        activation = [w*x for w, x in zip(self.weights, xs)] + [self.bias]
-        return sum(activation).tanh()
+        activation = sum((w*x for w, x in zip(self.weights, xs)), self.bias)
+        return activation.tanh()
 
 class Layer:
     """
     A simple Layer class that holds a list of neurons
     """
     def __init__(self, no_of_neurons_in_cur_layer, no_of_neurons_from_next_layer):
-        self.neurons = [Neuron(no_of_neurons_from_next_layer) for _ in range(no_of_neurons_in_cur_layer)] 
+        self.neurons = [Neuron(no_of_neurons_in_cur_layer) for _ in range(no_of_neurons_from_next_layer)] 
     
     def parameters(self):
         return [param for neuron in self.neurons for param in neuron.parameters()]
@@ -41,10 +41,9 @@ class MLP:
     A simple Multi-Layer Perceptron class
     """
     def __init__(self, no_of_neurons_in_first_layer, layers_list):#layers list contains the number of neurons in each layer
-        full_layers_list = [no_of_neurons_in_first_layer] + layers_list #[3, 4, 5, 1]
-        self.layers = [Layer(full_layers_list[i], full_layers_list[i+1]) for i in range(len(full_layers_list)-1)] #this will create the layers up to n-1
-        self.layers += [Layer(full_layers_list[-1], 1)]
-
+        full_layers_list = [no_of_neurons_in_first_layer] + layers_list
+        self.layers = [Layer(full_layers_list[i], full_layers_list[i+1]) for i in range(len(layers_list))]
+         
     def parameters(self):
         return [param for layer in self.layers for param in layer.parameters()]
 
